@@ -10,6 +10,7 @@ use HTTP::Tiny;
 use JSON qw(to_json from_json);
 
 my $session;
+my $sesstime=0;
 
 my %ok_res = map {$_ => 1} (
   'success',
@@ -36,11 +37,12 @@ sub add_torrent {
 
   my $ua = HTTP::Tiny->new();
 
-  unless ($session) {
+  unless ($session and $sesstime>(time-60) ) {
     my $resp = $ua->get($url);
 
     if ($resp->{headers}->{'x-transmission-session-id'}) {
       $session = $resp->{headers}->{'x-transmission-session-id'};
+      $sesstime = time;
     }
   }
 
