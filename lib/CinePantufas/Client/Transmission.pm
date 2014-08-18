@@ -68,7 +68,10 @@ sub add_torrent {
                     ||'',
       };
     }
-  } 
+  } else {
+    my $more = $ENV{DEBUG} ? $resp->{content} : '';
+    die "error on transmission: $resp->{status} $resp->{reason}\n$more\n";
+  }
 
   return 0;
 }
@@ -119,7 +122,8 @@ sub list_torrents {
 
     return \@torrents;
   } else {
-    die "error on transmission: $resp->{status} $resp->{reason}\n";
+    my $more = $ENV{DEBUG} ? $resp->{content} : '';
+    die "error on transmission: $resp->{status} $resp->{reason}\n$more\n";
   }
 }
 
