@@ -404,7 +404,6 @@ sub __cmd_move_done {
     my $cls = $hook->{class};
     my $handler = $hook->{handler};
 
-    print STDERR "calling hook in $cls\n";
     my $res = $handler->($cls);
     if ($res and ref $res eq 'ARRAY') {
       my %torrents = map { $_->{hashString} => $_ } 
