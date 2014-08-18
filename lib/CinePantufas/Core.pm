@@ -281,7 +281,7 @@ sub __cmd_get_new {
         my $k = $show.';:;'.$episode->{number};
         if ($epidb{$k}) {
           my $old = from_json($epidb{$k},{utf8=>1});
-          next unless $episode->{is_prio} and !$old->{is_prio};
+          next unless $episode->{prio} > $old->{prio};
         }
 
         my $status = 'new';

@@ -7,7 +7,16 @@ use CinePantufas::Core;
 
 use HTTP::Tiny;
 
-my $prio = qr{HDTV};
+my $prio = qr{HDTV|LOL|720p|x264|mkv|mp4|avi};
+my %prio = (
+  HDTV    => 1,
+  LOL     => 1,
+  '720p'  => -2,
+  x264    => 1,
+  mkv     => -1,
+  mp4     => 1,
+  avi     => 1,
+);
 
 sub source_name { "eztv" }
 
@@ -66,11 +75,15 @@ sub get_episode_list {
     $_ = "http:$_" for grep { substr($_,0,1) eq '/' } values %links;
   
     my $episode=($ses+0).'x'.sprintf('%02d', $epi);
-    my $isprio = $name =~ $prio;
-    if (!$episodes{$episode} or $isprio ) {
+    my @priobits  = $name =~ m{$prio}gi;
+    my $rowprio = 0;
+    for my $bit (@priobits) {
+      $rowprio += $prio{$bit} || 0;
+    }
+    if (!$episodes{$episode} or $rowprio > $episodes{$episode}->{prio} ) {
       $episodes{$episode} = {
           filename  => $name,
-          is_prio   => $isprio,
+          prio      => $prio,
           torrents  => [values %links],
           season    => $ses,
           episode   => $epi,
