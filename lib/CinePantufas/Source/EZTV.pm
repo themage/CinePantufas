@@ -83,7 +83,7 @@ sub get_episode_list {
     if (!$episodes{$episode} or $rowprio > $episodes{$episode}->{prio} ) {
       $episodes{$episode} = {
           filename  => $name,
-          prio      => $prio,
+          prio      => $rowprio,
           torrents  => [values %links],
           season    => $ses,
           episode   => $epi,
