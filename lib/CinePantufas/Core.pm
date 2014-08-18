@@ -422,7 +422,6 @@ sub __cmd_move_done {
             $epidb{$k} = to_json( $info, {utf8=>1});
 
             print STDERR "$info->{show} - $info->{number} ready\n";
-            exit; #only remove 1
           }
         }
       }
