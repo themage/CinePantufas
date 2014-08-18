@@ -414,6 +414,7 @@ sub __cmd_move_done {
       for my $k (keys %epidb) {
         my $info = from_json($epidb{$k}, {utf8=>1});
         next unless $info->{status} eq 'queued';
+        next unless $info->{hashString};
         next unless my $tor = $torrents{ $info->{hashString} };
 
         if (__copy_files( $info => $tor )) {
