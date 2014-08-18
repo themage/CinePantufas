@@ -315,6 +315,7 @@ sub __cmd_get_new {
 
   $class->__queue_new();
 }
+*__cmd_new = *__cmd_get_new;
 
 sub __queue_new {
   my $class = shift;
@@ -429,6 +430,7 @@ sub __cmd_move_done {
     }
   }
 }
+*__cmd_done = *__cmd_move_done;
 
 sub __copy_files {
   my ($info, $tor) = @_;
