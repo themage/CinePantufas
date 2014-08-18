@@ -1,0 +1,85 @@
+package CinePantufas::Source::EZTV;
+
+use strict;
+use warnings;
+
+use CinePantufas::Core;
+
+use HTTP::Tiny;
+
+my $prio = qr{HDTV};
+
+sub source_name { "eztv" }
+
+sub import {
+  CinePantufas::Core->register_hooks(
+    get_show_list => \&retrieve_show_list,
+  );
+}
+
+sub retrieve_show_list {
+  my $class = shift;
+
+  my $resp = HTTP::Tiny->new->get('http://eztv.it');
+
+  die "Failed: $resp->{status} $resp->{reason}\n"
+    unless $resp->{success};
+
+  my $html = $resp->{content} ||'';
+
+  ($html) = $html =~ m{<select\sname="SearchString">(.*?)</select>}smx;
+
+  my %shows = $html =~ m{<option value="(\d+)">([^<]+)</option}g;
+
+  my @shows = map {
+      { name      => $shows{$_},
+        params    => {
+          SearchString  => $_,
+        },
+      }
+    } keys %shows;
+
+  return @shows;
+}
+
+sub get_episode_list {
+  my ($class,$show) = @_;
+
+  my $resp = HTTP::Tiny->new->post_form('http://eztv.it/search/',
+        $show->{params}
+    );
+
+  unless ($resp->{success}) {
+    print STDERR "ERROR: $resp->{status} $resp->{reason}\n";
+    return;
+  }
+
+  my @rows = $resp->{content} =~ m{<tr \s+ name="hover"[^>]+>(.*?)</tr>}smxg;
+
+  my %episodes = ();
+  for my $row (@rows) {
+    my ($name) = $row =~ m{class="epinfo">([^>]+)</a>}smxi;
+    my ($ses,$epi) = $name =~ m{S(\d+)E(\d+)};
+    my %links = reverse
+        $row=~m{<a \s href="([^"]+)" \s+ class="download_(\d+)"}smxgi;
+
+    $_ = "http:$_" for grep { substr($_,0,1) eq '/' } values %links;
+  
+    my $episode=($ses+0).'x'.sprintf('%02d', $epi);
+    my $isprio = $name =~ $prio;
+    if (!$episodes{$episode} or $isprio ) {
+      $episodes{$episode} = {
+          filename  => $name,
+          is_prio   => $isprio,
+          torrents  => [values %links],
+          season    => $ses,
+          episode   => $epi,
+          number    => $episode,
+        };
+    }
+  }
+
+  return values %episodes;
+}
+
+1;
