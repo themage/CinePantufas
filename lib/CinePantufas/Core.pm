@@ -454,6 +454,8 @@ sub __copy_files {
   $dest .= 'Season'.$info->{season}.'/';
   mkdir $dest unless -d $dest;
 
+  die "error creating directory $dest\n" unless -d $dest;
+
   $dest .= $info->{show}.'--'.$info->{number}.'.'.$ext;
 
   if ($config->{disabled}) {
