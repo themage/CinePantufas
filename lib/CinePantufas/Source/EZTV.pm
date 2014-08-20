@@ -68,9 +68,14 @@ sub get_episode_list {
   my %episodes = ();
   for my $row (@rows) {
     my ($name) = $row =~ m{class="epinfo">([^>]+)</a>}smxi;
-    my ($ses,$epi) = $name =~ m{S(\d+)E(\d+)};
+    my ($ses,$epi) = $name =~ m{S?(\d+)[Ex](\d+)}i;
     my %links = reverse
         $row=~m{<a \s href="([^"]+)" \s+ class="download_(\d+)"}smxgi;
+
+    unless ($ses and $epi) {
+      print STDERR "Missing ses and epi in '$name'\n" if $ENV{DEBUG};
+      next;
+    }
 
     $_ = "http:$_" for grep { substr($_,0,1) eq '/' } values %links;
   

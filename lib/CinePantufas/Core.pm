@@ -71,6 +71,8 @@ sub __cmd_update {
       if @list;
   }
 
+  my @new = ();
+
   my $fname = ___show_file();
   my %epidb;
   tie %epidb, 'DB_File', $fname;
@@ -91,12 +93,16 @@ sub __cmd_update {
       $rec->{first_seen} = time;
       $rec->{name} = $show->{name};
 
+      push @new, $show->{name};
       $newshows++;
     }
     $epidb{$k} = to_json($rec, {utf8=>1});
   }
 
   print STDERR "updated $sources source(s): $newshows new shows\n";
+  if (@new) {
+    print STDERR " => $_\n" for @new;
+  }
 }
 
 
