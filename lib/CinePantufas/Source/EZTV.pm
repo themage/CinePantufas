@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use CinePantufas::Core;
+use CinePantufas::Priority qw(priority);
 
 use HTTP::Tiny;
 
@@ -80,11 +81,8 @@ sub get_episode_list {
     $_ = "http:$_" for grep { substr($_,0,1) eq '/' } values %links;
   
     my $episode=($ses+0).'x'.sprintf('%02d', $epi);
-    my @priobits  = $name =~ m{$prio}gi;
-    my $rowprio = 0;
-    for my $bit (@priobits) {
-      $rowprio += $prio{$bit} || 0;
-    }
+    my $rowprio = priority($name);
+    
     if (!$episodes{$episode} or $rowprio > $episodes{$episode}->{prio} ) {
       $episodes{$episode} = {
           filename  => $name,
