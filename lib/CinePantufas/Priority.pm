@@ -41,7 +41,6 @@ sub priority {
   $priority += $priorities{ $_ } || 0
     for @priobits;
 
-  print STDERR "PRIO: $fname => $priority\n";
   return $priority;
 }
 
