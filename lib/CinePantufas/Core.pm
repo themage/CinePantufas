@@ -458,7 +458,7 @@ sub __copy_files {
   $dest .= $info->{show}.'/';
   mkdir $dest unless -d $dest;
 
-  $dest .= 'Season'.$info->{season}.'/';
+  $dest .= sprintf 'Season%02d/',$info->{season};
   mkdir $dest unless -d $dest;
 
   die "error creating directory $dest\n" unless -d $dest;

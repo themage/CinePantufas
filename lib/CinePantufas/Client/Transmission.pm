@@ -31,6 +31,7 @@ sub import {
 sub add_torrent {
   my $class = shift;
   my $link  = shift;
+  my $retry = shift // 3;
 
   my $config = CinePantufas::Setup->config('transmission');
   my $url = $config->{api_url};
@@ -70,9 +71,12 @@ sub add_torrent {
                     ||'',
       };
     }
+  } elsif ( $resp->{status} == 409 and $retry--) {
+    $session = undef;
+    return $class->add_torrent( $link, $retry );
   } else {
     my $more = $ENV{DEBUG} ? $resp->{content} : '';
-    die "error on transmission: $resp->{status} $resp->{reason}\n$more\n";
+    warn "error on transmission: $resp->{status} $resp->{reason}\n$more\n";
   }
 
   return 0;
