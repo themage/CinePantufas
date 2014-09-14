@@ -7,6 +7,7 @@ use CinePantufas::Core;
 use CinePantufas::Priority qw(priority);
 
 use HTTP::Tiny;
+use HTTP::CookieJar;
 
 my $prio = qr{HDTV|LOL|720p|x264|mkv|mp4|avi};
 my %prio = (
@@ -19,6 +20,14 @@ my %prio = (
   avi     => 1,
 );
 
+my $ua;
+
+sub _ua {
+  return $ua ||= HTTP::Tiny->new(
+      cookie_jar  => HTTP::CookieJar->new(),
+    );
+}
+
 sub source_name { "eztv" }
 
 sub import {
@@ -30,7 +39,7 @@ sub import {
 sub retrieve_show_list {
   my $class = shift;
 
-  my $resp = HTTP::Tiny->new->get('http://eztv.it');
+  my $resp = _ua->get('https://eztv.it');
 
   die "Failed: $resp->{status} $resp->{reason}\n"
     unless $resp->{success};
@@ -55,7 +64,7 @@ sub retrieve_show_list {
 sub get_episode_list {
   my ($class,$show) = @_;
 
-  my $resp = HTTP::Tiny->new->post_form('http://eztv.it/search/',
+  my $resp = _ua->post_form('https://eztv.it/search/',
         $show->{params}
     );
 
@@ -78,7 +87,7 @@ sub get_episode_list {
       next;
     }
 
-    $_ = "http:$_" for grep { substr($_,0,1) eq '/' } values %links;
+    $_ = "https:$_" for grep { substr($_,0,1) eq '/' } values %links;
   
     my $episode=($ses+0).'x'.sprintf('%02d', $epi);
     my $rowprio = priority($name);
