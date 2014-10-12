@@ -30,7 +30,7 @@ sub import {
 sub retrieve_show_list {
   my $class = shift;
 
-  my $resp = HTTP::Tiny->new->get('http://eztv.it');
+  my $resp = HTTP::Tiny->new->get('https://eztv.it');
 
   die "Failed: $resp->{status} $resp->{reason}\n"
     unless $resp->{success};
