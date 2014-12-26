@@ -36,7 +36,7 @@ sub add_torrent {
   my $config = CinePantufas::Setup->config('transmission');
   my $url = $config->{api_url};
 
-  my $ua = HTTP::Tiny->new();
+  my $ua = HTTP::Tiny->new(timeout => 180);
 
   unless ($session and $sesstime>(time-60) ) {
     my $resp = $ua->get($url);
@@ -74,9 +74,13 @@ sub add_torrent {
   } elsif ( $resp->{status} == 409 and $retry--) {
     $session = undef;
     return $class->add_torrent( $link, $retry );
+  } elsif ( $res->{status} == 599 ) {
+    if ($ENV{DEBUG}) {
+      print STDERR "got a 599: $url => $content\n+++++++++\n$resp->{content}\n\n"; 
+    }
   } else {
-    my $more = $ENV{DEBUG} ? $resp->{content} : '';
-    warn "error on transmission: $resp->{status} $resp->{reason}\n$more\n";
+    my $more = $ENV{DEBUG} ? ($resp->{content}."\n") : '';
+    warn "error on transmission: $resp->{status} $resp->{reason}\n$more";
   }
 
   return 0;
@@ -140,7 +144,7 @@ sub remove_torrent {
   my $config = CinePantufas::Setup->config('transmission');
   my $url = $config->{api_url};
 
-  my $ua = HTTP::Tiny->new();
+  my $ua = HTTP::Tiny->new(timeout => 120);
 
   unless ($session) {
     my $resp = $ua->get($url);
