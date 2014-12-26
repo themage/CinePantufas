@@ -74,7 +74,7 @@ sub add_torrent {
   } elsif ( $resp->{status} == 409 and $retry--) {
     $session = undef;
     return $class->add_torrent( $link, $retry );
-  } elsif ( $res->{status} == 599 ) {
+  } elsif ( $resp->{status} == 599 ) {
     if ($ENV{DEBUG}) {
       print STDERR "got a 599: $url => $content\n+++++++++\n$resp->{content}\n\n"; 
     }
