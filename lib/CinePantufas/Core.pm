@@ -238,7 +238,7 @@ sub __cmd_list {
   my %followdb;
   tie %followdb, 'DB_File', $fname;
 
-  for my $show (keys %followdb) {
+  for my $show (sort keys %followdb) {
     my $info    = from_json($showdb{$show},{utf8=>1});
     my $follow  = from_json($followdb{$show},{utf8=>1});
     
@@ -283,10 +283,14 @@ sub __cmd_get_new {
 
       my @episodes = $class->get_episode_list( $source );
 
-      for my $episode (@episodes) {
+      for my $episode (sort { 
+                $a->{season} <=> $b->{season}
+            or  $a->{episode} <=> $b->{episode}
+          } @episodes) {
         my $k = $show.';:;'.$episode->{number};
         if ($epidb{$k}) {
           my $old = from_json($epidb{$k},{utf8=>1});
+          next unless $old->{status} eq 'new'
           next unless $episode->{prio} > $old->{prio};
         }
 
