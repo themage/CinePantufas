@@ -39,7 +39,7 @@ sub import {
 sub retrieve_show_list {
   my $class = shift;
 
-  my $resp = _ua->get('https://eztv.it');
+  my $resp = _ua->get('https://eztv.ch');
 
   die "Failed: $resp->{status} $resp->{reason}\n"
     unless $resp->{success};
@@ -64,7 +64,7 @@ sub retrieve_show_list {
 sub get_episode_list {
   my ($class,$show) = @_;
 
-  my $resp = _ua->post_form('https://eztv.it/search/',
+  my $resp = _ua->post_form('https://eztv.ch/search/',
         $show->{params}
     );
 
