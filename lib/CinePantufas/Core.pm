@@ -387,19 +387,12 @@ sub __cmd_reget {
   my ($seas,$epi) = $episode =~ m{S?(\d+)[Ex](\d+)}i;
   $episode = ($seas+0).'x'.sprintf('%02d', $epi);
   my $k = $show.';:;'.$episode;
-  if ($epidb{ $k }) {
-    my $info = from_json($epidb{$k}, {utf8=>1});
-    $info->{status} = 'new';
-    $epidb{$k} = to_json($info);
-
-    print STDERR "set to new $show - $episode\n";
-  } else {
-    die "Unknow episode $show - $episode\n";
-  }
+  
+  delete $epidb{ $k };
 
   untie %epidb;
   untie %followdb;
-  $class->__queue_new();
+  $class->__cmd_new();
 }
 
 sub __cmd_move_done {
