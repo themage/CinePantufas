@@ -22,6 +22,8 @@ my %prio = (
 
 my $ua;
 
+my $base = 'https://eztv-proxy.net/';
+
 sub _ua {
   return $ua ||= HTTP::Tiny->new(
       cookie_jar  => HTTP::CookieJar->new(),
@@ -39,7 +41,7 @@ sub import {
 sub retrieve_show_list {
   my $class = shift;
 
-  my $resp = _ua->get('https://eztv.ch');
+  my $resp = _ua->get($base);
 
   die "Failed: $resp->{status} $resp->{reason}\n"
     unless $resp->{success};
@@ -64,7 +66,7 @@ sub retrieve_show_list {
 sub get_episode_list {
   my ($class,$show) = @_;
 
-  my $resp = _ua->post_form('https://eztv.ch/search/',
+  my $resp = _ua->post_form("$base/search/",
         $show->{params}
     );
 
