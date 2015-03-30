@@ -22,7 +22,7 @@ my %prio = (
 
 my $ua;
 
-my $base = 'https://eztv-proxy.net/';
+my $base = 'https://eztv.it/';
 
 sub _ua {
   return $ua ||= HTTP::Tiny->new(
