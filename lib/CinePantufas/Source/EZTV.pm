@@ -22,7 +22,7 @@ my %prio = (
 
 my $ua;
 
-my $base = 'https://eztv.ch';
+my $base = 'https://eztv.ag';
 
 sub _ua {
   return $ua ||= HTTP::Tiny->new(
@@ -82,7 +82,7 @@ sub get_episode_list {
     my ($name) = $row =~ m{class="epinfo">([^>]+)</a>}smxi;
     my ($ses,$epi) = $name =~ m{S?(\d+)[Ex](\d+)}i;
     my %links = reverse
-        $row=~m{<a \s href="([^"]+)" \s+ class="download_(\d+)"}smxgi;
+        $row=~m{<a \s href="([^"]+)"\s+(?:rel="nofollow")?\s*class="(magnet|download_[\d+])"}smxgi;
 
     unless ($ses and $epi) {
       print STDERR "Missing ses and epi in '$name'\n" if $ENV{DEBUG};
