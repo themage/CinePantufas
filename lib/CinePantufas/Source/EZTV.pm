@@ -89,6 +89,11 @@ sub get_episode_list {
       next;
     }
 
+    # Previledge magnet links over torrent files.
+    if ( $links{magnet} ) {
+      %links = ( 'magnet' => $links{magnet} );
+    }
+
     $_ = "https:$_" for grep { substr($_,0,1) eq '/' } values %links;
   
     my $episode=($ses+0).'x'.sprintf('%02d', $epi);
