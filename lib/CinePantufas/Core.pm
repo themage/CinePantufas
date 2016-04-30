@@ -205,6 +205,10 @@ sub __cmd_del_show {
   my %followdb;
   tie %followdb, 'DB_File', $fname;
 
+  my $ename = ___episode_file();
+  my %epidb;
+  tie %epidb, 'DB_File', $ename;
+
   if ($followdb{$show}) {
     my $info = from_json($showdb{$show}, {utf8=>1});
     my $follow  = from_json($followdb{$show},{utf8=>1});
@@ -219,17 +223,29 @@ sub __cmd_del_show {
         '-'x70;
       print "\n => stopped following\n";
 
+      for my $k (sort keys %epidb) {
+        my ($k_show, undef) = split ';:;', $k;
+
+        next unless $k_show eq $show;
+
+        delete $epidb{$k};
+      }
+
       delete $followdb{$show};
     }
   } else {
     print STDERR "You are not following '$show'\n";
   }
+
+  untie %showdb;
+  untie %followdb;
+  untie %epidb;
 }
 *__cmd_del = *__cmd_del_show;
 
 sub __cmd_list {
   my $class = shift;
-  
+
   my $sname = ___show_file();
   my %showdb;
   tie %showdb, 'DB_File', $sname;
