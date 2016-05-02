@@ -158,7 +158,7 @@ sub remove_torrent {
       method    => 'torrent-remove',
       arguments => {
         ids   => [ $tor->{id} ],
-        'delete-local-data' => JSON::true,
+        'delete-local-data' => $config->{delete_local_data} ? JSON::true : JSON::false,
       }
     }, {utf8=>1});
 
