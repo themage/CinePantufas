@@ -65,6 +65,27 @@ sub add_torrent {
   if ($resp->{status} == 200) {
     my $res = from_json($resp->{content});
     if ($ok_res{ $res->{result} } ) {
+
+      # TODO(nsenica): Validate if seed_ratio is double
+      if ( $config->{seed_ratio} ) {
+            my $content = to_json({
+                method    => 'torrent-set',
+                arguments => {
+                  ids  => [$res->{arguments}->{'torrent-added'}->{hashString}],
+                  seedRatioLimit => $config->{seed_ratio},
+		  seedRatioMode  => 1, # 0 = Global , 1 = Torrent mode, 2 = Unlimited
+                }
+              }, {utf8=>1});
+
+            $ua->post(
+                $url,{
+                headers => {
+                  "X-Transmission-Session-Id" => $session,
+                },
+                content => $content,
+              });
+      }
+
       return {
         status => 'ok',
         hashString => $res->{arguments}->{'torrent-added'}->{hashString}
