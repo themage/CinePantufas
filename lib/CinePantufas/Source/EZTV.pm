@@ -22,7 +22,7 @@ my %prio = (
 
 my $ua;
 
-my $base = 'https://eztv.ch';
+my $base = 'https://eztv.ag';
 
 sub _ua {
   return $ua ||= HTTP::Tiny->new(
@@ -48,7 +48,7 @@ sub retrieve_show_list {
 
   my $html = $resp->{content} ||'';
 
-  ($html) = $html =~ m{<select\sname="SearchString">(.*?)</select>}smx;
+  ($html) = $html =~ m{<select\sname="q2"\sclass="tv-show-search-select">(.*?)</select>}smx;
 
   my %shows = $html =~ m{<option value="(\d+)">([^<]+)</option}g;
 
@@ -66,9 +66,7 @@ sub retrieve_show_list {
 sub get_episode_list {
   my ($class,$show) = @_;
 
-  my $resp = _ua->post_form("$base/search/",
-        $show->{params}
-    );
+  my $resp = _ua->get("$base/search/?q1=&q2=".$show->{params}->{SearchString}."&search=Search");
 
   unless ($resp->{success}) {
     print STDERR "ERROR: $resp->{status} $resp->{reason}\n";
@@ -82,11 +80,16 @@ sub get_episode_list {
     my ($name) = $row =~ m{class="epinfo">([^>]+)</a>}smxi;
     my ($ses,$epi) = $name =~ m{S?(\d+)[Ex](\d+)}i;
     my %links = reverse
-        $row=~m{<a \s href="([^"]+)" \s+ class="download_(\d+)"}smxgi;
+        $row=~m{<a \s href="([^"]+)"\s+(?:rel="nofollow")?\s*class="(magnet|download_[\d+])"}smxgi;
 
     unless ($ses and $epi) {
       print STDERR "Missing ses and epi in '$name'\n" if $ENV{DEBUG};
       next;
+    }
+
+    # Previledge magnet links over torrent files.
+    if ( $links{magnet} ) {
+      %links = ( 'magnet' => $links{magnet} );
     }
 
     $_ = "https:$_" for grep { substr($_,0,1) eq '/' } values %links;
