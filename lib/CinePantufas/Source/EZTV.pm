@@ -48,7 +48,7 @@ sub retrieve_show_list {
 
   my $html = $resp->{content} ||'';
 
-  ($html) = $html =~ m{<select\sname="SearchString">(.*?)</select>}smx;
+  ($html) = $html =~ m{<select\sname="q2"\sclass="tv-show-search-select">(.*?)</select>}smx;
 
   my %shows = $html =~ m{<option value="(\d+)">([^<]+)</option}g;
 
@@ -66,9 +66,7 @@ sub retrieve_show_list {
 sub get_episode_list {
   my ($class,$show) = @_;
 
-  my $resp = _ua->post_form("$base/search/",
-        $show->{params}
-    );
+  my $resp = _ua->get("$base/search/?q1=&q2=".$show->{params}->{SearchString}."&search=Search");
 
   unless ($resp->{success}) {
     print STDERR "ERROR: $resp->{status} $resp->{reason}\n";
