@@ -48,7 +48,7 @@ sub retrieve_show_list {
 
   my $html = $resp->{content} ||'';
 
-  ($html) = $html =~ m{<select\sname="q2"\sclass="tv-show-search-select">(.*?)</select>}smx;
+  ($html) = $html =~ m{<select\sname="q2"\sclass="tv-show-search-select(.*?)</select>}smx;
 
   my %shows = $html =~ m{<option value="(\d+)">([^<]+)</option}g;
 
