@@ -8,6 +8,7 @@ use CinePantufas::Priority qw(priority);
 
 use HTTP::Tiny;
 use HTTP::CookieJar;
+use JSON;
 
 my $prio = qr{HDTV|LOL|720p|x264|mkv|mp4|avi};
 my %prio = (
@@ -41,26 +42,25 @@ sub import {
 sub retrieve_show_list {
   my $class = shift;
 
-  my $resp = _ua->get($base);
+  my $resp = _ua->get($base."/js/search_shows1.js");
 
   die "Failed: $resp->{status} $resp->{reason}\n"
     unless $resp->{success};
 
   my $html = $resp->{content} ||'';
 
-  ($html) = $html =~ m{<select\sname="q2"\sclass="tv-show-search-select(.*?)</select>}smx;
+  ($html) = $html =~ m{(\[.*?\])}smx;
+  my $shows = from_json($html);
 
-  my %shows = $html =~ m{<option value="(\d+)">([^<]+)</option}g;
-
-  my @shows = map {
-      { name      => $shows{$_},
+  my @allshows = map {
+      { name      => $_->{text},
         params    => {
-          SearchString  => $_,
+          SearchString  => $_->{id},
         },
       }
-    } keys %shows;
+    } @$shows;
 
-  return @shows;
+  return @allshows;
 }
 
 sub get_episode_list {
