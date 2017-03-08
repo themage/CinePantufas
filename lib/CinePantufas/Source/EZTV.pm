@@ -8,6 +8,7 @@ use CinePantufas::Priority qw(priority);
 
 use HTTP::Tiny;
 use HTTP::CookieJar;
+use JSON;
 
 my $prio = qr{HDTV|LOL|720p|x264|mkv|mp4|avi};
 my %prio = (
@@ -22,7 +23,7 @@ my %prio = (
 
 my $ua;
 
-my $base = 'https://eztv.ch';
+my $base = 'https://eztv.ag';
 
 sub _ua {
   return $ua ||= HTTP::Tiny->new(
@@ -41,34 +42,31 @@ sub import {
 sub retrieve_show_list {
   my $class = shift;
 
-  my $resp = _ua->get($base);
+  my $resp = _ua->get($base."/js/search_shows1.js");
 
   die "Failed: $resp->{status} $resp->{reason}\n"
     unless $resp->{success};
 
   my $html = $resp->{content} ||'';
 
-  ($html) = $html =~ m{<select\sname="SearchString">(.*?)</select>}smx;
+  ($html) = $html =~ m{(\[.*?\])}smx;
+  my $shows = from_json($html);
 
-  my %shows = $html =~ m{<option value="(\d+)">([^<]+)</option}g;
-
-  my @shows = map {
-      { name      => $shows{$_},
+  my @allshows = map {
+      { name      => $_->{text},
         params    => {
-          SearchString  => $_,
+          SearchString  => $_->{id},
         },
       }
-    } keys %shows;
+    } @$shows;
 
-  return @shows;
+  return @allshows;
 }
 
 sub get_episode_list {
   my ($class,$show) = @_;
 
-  my $resp = _ua->post_form("$base/search/",
-        $show->{params}
-    );
+  my $resp = _ua->get("$base/search/?q1=&q2=".$show->{params}->{SearchString}."&search=Search");
 
   unless ($resp->{success}) {
     print STDERR "ERROR: $resp->{status} $resp->{reason}\n";
@@ -82,11 +80,16 @@ sub get_episode_list {
     my ($name) = $row =~ m{class="epinfo">([^>]+)</a>}smxi;
     my ($ses,$epi) = $name =~ m{S?(\d+)[Ex](\d+)}i;
     my %links = reverse
-        $row=~m{<a \s href="([^"]+)" \s+ class="download_(\d+)"}smxgi;
+        $row=~m{<a \s href="([^"]+)"\s+(?:rel="nofollow")?\s*class="(magnet|download_[\d+])"}smxgi;
 
     unless ($ses and $epi) {
       print STDERR "Missing ses and epi in '$name'\n" if $ENV{DEBUG};
       next;
+    }
+
+    # Previledge magnet links over torrent files.
+    if ( $links{magnet} ) {
+      %links = ( 'magnet' => $links{magnet} );
     }
 
     $_ = "https:$_" for grep { substr($_,0,1) eq '/' } values %links;

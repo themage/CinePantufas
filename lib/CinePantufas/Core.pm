@@ -205,6 +205,10 @@ sub __cmd_del_show {
   my %followdb;
   tie %followdb, 'DB_File', $fname;
 
+  my $ename = ___episode_file();
+  my %epidb;
+  tie %epidb, 'DB_File', $ename;
+
   if ($followdb{$show}) {
     my $info = from_json($showdb{$show}, {utf8=>1});
     my $follow  = from_json($followdb{$show},{utf8=>1});
@@ -219,17 +223,29 @@ sub __cmd_del_show {
         '-'x70;
       print "\n => stopped following\n";
 
+      for my $k (sort keys %epidb) {
+        my ($k_show, undef) = split ';:;', $k;
+
+        next unless $k_show eq $show;
+
+        delete $epidb{$k};
+      }
+
       delete $followdb{$show};
     }
   } else {
     print STDERR "You are not following '$show'\n";
   }
+
+  untie %showdb;
+  untie %followdb;
+  untie %epidb;
 }
 *__cmd_del = *__cmd_del_show;
 
 sub __cmd_list {
   my $class = shift;
-  
+
   my $sname = ___show_file();
   my %showdb;
   tie %showdb, 'DB_File', $sname;
@@ -438,6 +454,8 @@ sub __copy_files {
   my ($info, $tor) = @_;
   my $config = CinePantufas::Setup->config('move');
 
+  return 1 if defined $config->{move_files} && $config->{move_files} == 0;
+
   return unless $config->{basedir};
 
   my $source = $tor->{downloadDir};
@@ -445,22 +463,30 @@ sub __copy_files {
 
   return unless $fname;
 
-  my $ext = (split /\./, $fname)[-1];
-
   $source .= '/' unless substr($source,-1) eq '/';
   $source .= $fname;
 
   my $dest = $config->{basedir};
   $dest .= '/' unless substr($dest,-1) eq '/';
-  $dest .= $info->{show}.'/';
-  mkdir $dest unless -d $dest;
 
-  $dest .= sprintf 'Season%02d/',$info->{season};
-  mkdir $dest unless -d $dest;
+  if ( $config->{move_files_into_show_dir} ) {
+    $dest .= $info->{show}.'/';
+    mkdir $dest unless -d $dest;
 
-  die "error creating directory $dest\n" unless -d $dest;
+    if ( $config->{move_files_into_season_dir} ) {
+      $dest .= sprintf 'Season%02d/',$info->{season};
+    }
 
-  $dest .= $info->{show}.'--'.$info->{number}.'.'.$ext;
+    mkdir $dest unless -d $dest;
+    die "error creating directory $dest\n" unless -d $dest;
+  }
+
+  unless ($config->{keep_filename}) {
+    my $ext = (split /\./, $fname)[-1];
+    $dest .= $info->{show}.'--'.$info->{number}.'.'.$ext;
+  } else {
+    $dest .= $fname;
+  }
 
   if ($config->{disabled}) {
     print STDERR "would move '$source' to '$dest'\n";
